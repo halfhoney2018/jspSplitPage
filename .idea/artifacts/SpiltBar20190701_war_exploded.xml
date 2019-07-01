@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="SpiltBar20190701:war exploded">
+    <output-path>$PROJECT_DIR$/out/artifacts/SpiltBar20190701_war_exploded</output-path>
+    <root id="root">
+      <element id="javaee-facet-resources" facet="SpiltBar20190701/web/Web" />
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="SpiltBar20190701" />
+          <element id="library" level="project" name="lib" />
+        </element>
+      </element>
+    </root>
+  </artifact>
+</component>

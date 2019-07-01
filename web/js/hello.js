@@ -1,0 +1,1 @@
+window.alert("欢迎进入到JavaScript的世界。") ;

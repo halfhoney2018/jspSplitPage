@@ -1,0 +1,143 @@
+<%@ page pageEncoding="UTF-8"%>
+<%@ page import="java.sql.*"%>
+<html>
+<head>
+	<title>JavaWEB分页程序</title>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css" />
+</head>
+<%!
+	public static final String DBDRIVER = "com.mysql.cj.jdbc.Driver" ;
+	public static final String DBURL = "jdbc:mysql://localhost:3306/test" ;
+	public static final String USER = "root" ;
+	public static final String PASSWORD = "090615Wzn" ;
+%>
+<%	// 与分页有关的变量定义
+	long currentPage = 1 ; // 当前所在页编号
+	int lineSize = 3 ; // 每页显示3行记录
+	long allRecorders = 0 ; // 总的记录数
+	long pageSize = 0 ; // 计算总页数
+	String columnData = "用户编号:mid|用户姓名:name" ;
+	String url = "member_list_c.jsp" ;
+	String column = "mid" ; // 表示要进行模糊查询的列名称
+	String keyword = null ; // 模糊查询关键字
+%>
+<%
+	try {
+		currentPage = Long.parseLong(request.getParameter("cp")) ;
+	} catch (Exception e) {}
+	try {
+		lineSize = Integer.parseInt(request.getParameter("ls")) ;
+	} catch (Exception e) {}
+	column = request.getParameter("col") ; // 接收模糊查询列
+	if (column == null || "".equals(column)) {
+		column = "mid" ; // 没有设置查询列，设置默认查询列
+	} 
+	keyword = request.getParameter("kw") ; // 接收模糊查询关键字
+	if (keyword == null) {
+		keyword = "" ; // 空字符串
+	}
+%>
+<%
+	Class.forName(DBDRIVER) ;
+	Connection conn = DriverManager.getConnection(DBURL,USER,PASSWORD) ;
+%>
+<%
+	String sql = "SELECT COUNT(*) FROM member WHERE " + column + " LIKE ?" ; 	// 统计记录数
+	PreparedStatement pstmt = conn.prepareStatement(sql) ;
+	pstmt.setString(1, "%" + keyword + "%") ;
+	ResultSet rs = pstmt.executeQuery() ;
+	if (rs.next()) {
+		allRecorders = rs.getLong(1) ; // 获取总记录数
+	}
+	pageSize = (allRecorders + lineSize - 1) / lineSize ;
+	if (pageSize == 0) {	// 没有任何的数据记录
+		pageSize = 1 ; // 当前在第1页
+	}
+%>
+<%
+	sql = "SELECT mid,name,note FROM member WHERE " + column + " LIKE ? LIMIT ?,?" ;
+	pstmt = conn.prepareStatement(sql) ;
+	pstmt.setString(1, "%" + keyword + "%") ;
+	pstmt.setLong(2, (currentPage - 1) * lineSize) ;
+	pstmt.setInt(3, lineSize) ;
+	rs = pstmt.executeQuery() ;
+%>
+<body class="container">
+	<div id="searchDiv">
+		<form ation="<%=url%>" class="form-horizontal" id="searchform" method="get">
+			<div class="form-group" id="searchDiv">
+				<div class="col-md-2">
+					<select id="col" name="col" class="form-control">
+<%
+						String columnResult [] = columnData.split("\\|") ;
+						for (int x = 0 ; x < columnResult.length ; x ++) {
+							String temp [] = columnResult[x].split(":") ;
+%>
+							<option value="<%=temp[1]%>"><%=temp[0]%></option>
+<%
+						}
+%>
+					</select>
+				</div>
+				<div class="col-md-9">
+					<input type="text" id="kw" name="kw" class="form-control" placeholder="请输入模糊查询关键字" value="<%=keyword%>">
+				</div>
+				<div class="col-md-1">
+					<input type="submit" class="btn btn-primary" value="搜索">
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="row">
+		<table class="table table-condensed">
+			<thead>
+				<tr>
+					<td class="text-center"><strong>编号</strong></td>
+					<td class="text-center"><strong>姓名</strong></td>
+					<td class="text-center"><strong>介绍</strong></td>
+				</tr>
+			</thead>
+			<tbody>
+			<%
+				while (rs.next()) {
+					String mid = rs.getString(1) ;
+					String name = rs.getString(2) ;
+					String note = rs.getString(3) ;
+			%>
+				<tr>
+					<td class="text-center"><%=mid%></td>
+					<td class="text-center"><%=name%></td>
+					<td class="text-center"><%=note%></td>
+				</tr>
+			<%
+				}
+			%>
+			</tbody>
+		</table>
+	</div>
+	<div id="pagebarDiv" style="float:right">
+		<ul class="pagination"> 
+<%
+	for (int x = 1 ; x <= pageSize ; x ++) {
+		if (currentPage == x) {
+%>
+			<li class="active"><span><%=x%></span></li>
+<%
+		} else {
+%>
+			<li><a href="<%=url%>?cp=<%=x%>&ls=<%=lineSize%>&col=<%=column%>&kw=<%=keyword%>"><%=x%></a></li>
+<%
+		}
+	}
+%>
+		</ul>
+	</div>
+<%
+	conn.close() ;
+%>
+</body>
+</html>
